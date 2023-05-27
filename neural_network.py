@@ -25,6 +25,22 @@ class Activation_ReLU:
         self.dinputs[self.inputs <= 0] = 0
 
 
+class Activation_Sigmoid:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+    def backward(self, dvalues):
+        self.dinputs = dvalues * (1 - self.output) * self.output
+
+
+class Activation_Linear:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = inputs
+    def backward(self, dvalues):
+        self.dinputs = dvalues.copy()
+        
+
 class Activation_Softmax:
     def forward(self, inputs):
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
@@ -62,6 +78,18 @@ class Loss_CategoricalCrossentropy(Loss):
             y_true = np.eye(labels)[y_true]
         self.dinputs = -y_true / dvalues
         self.dinputs = self.dinputs / samples
+
+
+class Loss_MeanSquaredError(Loss):
+    def forward(self, y_pred, y_true):
+        sample_losses = np.mean((y_true - y_pred)**2, axis=-1)
+        return sample_losses
+    def backward(self, dvalues, y_true):
+        samples = len(dvalues)
+        outputs = len(dvalues[0])
+        self.dinputs = -2 * (y_true - dvalues) / outputs
+        self.dinputs = self.dinputs / samples
+
 
 class Activation_Softmax_Loss_CategoricalCrossentropy():
     def __init__(self):
@@ -115,6 +143,7 @@ accuracy = np.mean(predictions==y)
 # Print accuracy
 print('acc:', accuracy)
 # Backward pass
+print("y: ", y)
 loss_activation.backward(loss_activation.output, y)
 dense2.backward(loss_activation.dinputs)
 activation1.backward(dense2.dinputs)
