@@ -242,6 +242,34 @@ class Optimizer_iRProp_Plus:
         layer.delta_b_cache = delta_b
 
 
+class Optimizer_iRProp_Minus:
+    def __init__(self, positive_eta=1.2, negative_eta=0.5, delta_max=50, delta_min=0):
+        self.positive_eta = positive_eta
+        self.negative_eta = negative_eta
+        self.delta_max = delta_max
+        self.delta_min = delta_min
+    def update_params(self, layer):
+        if not hasattr(layer, "delta_weights"):
+            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
+            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        self.__update_weights(layer)
+        self.__update_biases(layer)
+    def __update_weights(self, layer):
+        same_sign_weight = layer.dweights_cache * layer.dweights > 0
+        layer.delta_weights[same_sign_weight] = np.minimum(layer.delta_weights[same_sign_weight] * self.positive_eta, self.delta_max)
+        different_sign_weight = layer.dweights_cache * layer.dweights < 0
+        layer.delta_weights[different_sign_weight] = np.maximum(layer.delta_weights[different_sign_weight] * self.negative_eta, self.delta_min)
+        layer.dweights[different_sign_weight] = 0
+        layer.weights -= np.sign(layer.dweights) * layer.delta_weights
+    def __update_biases(self, layer):
+        same_sign_bias = layer.dbiases_cache * layer.dbiases > 0
+        layer.delta_biases[same_sign_bias] = np.minimum(layer.delta_biases[same_sign_bias] * self.positive_eta, self.delta_max)
+        different_sign_bias = layer.dbiases_cache * layer.dbiases < 0
+        layer.delta_biases[different_sign_bias] = np.maximum(layer.delta_biases[different_sign_bias] * self.negative_eta, self.delta_min)
+        layer.dbiases[different_sign_bias] = 0
+        layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
+
+
 X, y = spiral_data(samples=100, classes=3)
 dense1 = Layer_Dense(2, 64)
 activation1 = Activation_ReLU()
@@ -251,6 +279,7 @@ optimizer = Optimizer_SGD()
 rprop_minus = Optimizer_RProp_Minus()
 rprop_plus = Optimizer_RProp_Plus()
 irprop_plus = Optimizer_iRProp_Plus()
+irprop_minus = Optimizer_iRProp_Minus()
 for epoch in range(10001):
     dense1.forward(X)
     activation1.forward(dense1.output)
@@ -273,6 +302,8 @@ for epoch in range(10001):
     #rprop_minus.update_params(dense2)
     #rprop_plus.update_params(dense1)
     #rprop_plus.update_params(dense2)
-    irprop_plus.update_params(dense1, loss)
-    irprop_plus.update_params(dense2, loss)
+    #irprop_plus.update_params(dense1, loss)
+    #irprop_plus.update_params(dense2, loss)
+    irprop_minus.update_params(dense1)
+    irprop_minus.update_params(dense2)
 
