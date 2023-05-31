@@ -148,7 +148,6 @@ class Optimizer_RProp_Minus:
         different_sign_bias = layer.dbiases_cache * layer.dbiases < 0
         layer.delta_biases[different_sign_bias] = np.maximum(layer.delta_biases[different_sign_bias] * self.negative_eta, self.delta_min)
         layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
-    
 
 
 class Optimizer_RProp_Plus:
@@ -193,6 +192,56 @@ class Optimizer_RProp_Plus:
         layer.delta_b_cache = delta_b
 
 
+class Optimizer_iRProp_Plus:
+    def __init__(self, positive_eta=1.2, negative_eta=0.5, delta_max=50, delta_min=0):
+        self.positive_eta = positive_eta
+        self.negative_eta = negative_eta
+        self.delta_max = delta_max
+        self.delta_min = delta_min
+    def update_params(self, layer, loss):
+        if not hasattr(layer, "delta_weights"):
+            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
+            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+            layer.delta_w_cache = np.zeros(layer.weights.shape)
+            layer.delta_b_cache = np.zeros(layer.biases.shape)
+            layer.loss_cache = 0        
+        self.__update_weights(layer, loss)
+        self.__update_biases(layer, loss)
+    def __update_weights(self, layer, loss):
+        same_sign = layer.dweights_cache * layer.dweights > 0
+        layer.delta_weights[same_sign] = np.minimum(layer.delta_weights[same_sign] * self.positive_eta, self.delta_max)
+        different_sign = layer.dweights_cache * layer.dweights < 0
+        layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
+        delta_w = np.zeros(layer.weights.shape)
+        same_sign_update = layer.dweights_cache * layer.dweights >= 0
+        delta_w[same_sign_update] = -np.sign(layer.dweights[same_sign_update]) * layer.delta_weights[same_sign_update]
+        different_sign_update = layer.dweights_cache * layer.dweights < 0
+        if loss > layer.loss_cache:
+            delta_w[different_sign_update] = -layer.delta_w_cache[different_sign_update]
+        else:
+            delta_w[different_sign_update] = 0
+        layer.dweights[different_sign_update] = 0
+        layer.weights += delta_w
+        layer.delta_w_cache = delta_w
+        layer.loss_cache = loss
+    def __update_biases(self, layer, loss):
+        same_sign = layer.dbiases_cache * layer.dbiases > 0
+        layer.delta_biases[same_sign] = np.minimum(layer.delta_biases[same_sign] * self.positive_eta, self.delta_max)
+        different_sign = layer.dbiases_cache * layer.dbiases < 0
+        layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
+        delta_b = np.zeros(layer.biases.shape)
+        same_sign_update = layer.dbiases_cache * layer.dbiases >= 0
+        delta_b[same_sign_update] = -np.sign(layer.dbiases[same_sign_update]) * layer.delta_biases[same_sign_update]
+        different_sign_update = layer.dbiases_cache * layer.dbiases < 0
+        if loss > layer.loss_cache:
+            delta_b[different_sign_update] = -layer.delta_b_cache[different_sign_update]
+        else:
+            delta_b[different_sign_update] = 0
+        layer.dbiases[different_sign_update] = 0     
+        layer.biases += delta_b
+        layer.delta_b_cache = delta_b
+
+
 X, y = spiral_data(samples=100, classes=3)
 dense1 = Layer_Dense(2, 64)
 activation1 = Activation_ReLU()
@@ -201,6 +250,7 @@ loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 optimizer = Optimizer_SGD()
 rprop_minus = Optimizer_RProp_Minus()
 rprop_plus = Optimizer_RProp_Plus()
+irprop_plus = Optimizer_iRProp_Plus()
 for epoch in range(10001):
     dense1.forward(X)
     activation1.forward(dense1.output)
@@ -221,7 +271,8 @@ for epoch in range(10001):
     #optimizer.update_params(dense2)
     #rprop_minus.update_params(dense1)
     #rprop_minus.update_params(dense2)
-    rprop_plus.update_params(dense1)
-    rprop_plus.update_params(dense2)
-
+    #rprop_plus.update_params(dense1)
+    #rprop_plus.update_params(dense2)
+    irprop_plus.update_params(dense1, loss)
+    irprop_plus.update_params(dense2, loss)
 
