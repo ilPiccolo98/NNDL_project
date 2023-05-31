@@ -4,14 +4,30 @@ from nnfs.datasets import spiral_data
 
 nnfs.init()
 
+def min(a, b):
+    if a < b:
+        return a
+    return b
+
+def max(a, b):
+    if a > b:
+        return a
+    return b
+
+
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
+        self.dweights_cache = np.zeros((n_inputs, n_neurons))
+        self.dbiases_cache = np.zeros((1, n_neurons))
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
     def backward(self, dvalues):
+        if hasattr(self, "dweights"):
+            self.dweights_cache = np.copy(self.dweights)
+            self.dbiases_cache = np.copy(self.dbiases)
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
@@ -118,12 +134,59 @@ class Optimizer_SGD:
         layer.biases += -self.learning_rate * layer.dbiases
 
 
-X, y = spiral_data(samples=100, classes=3)
+class Optimizer_RProp:
+    def __init__(self, positive_eta=1.2, negative_eta=0.5, delta_max=50, delta_min=0):
+        self.positive_eta = positive_eta
+        self.negative_eta = negative_eta
+        self.delta_max = delta_max
+        self.delta_min = delta_min
+    def update_params(self, layer):
+        if not hasattr(layer, "delta_weights"):
+            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
+            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        same_sign_weight = layer.dweights_cache * layer.dweights > 0
+        layer.delta_weights[same_sign_weight] = np.minimum(layer.delta_weights[same_sign_weight] * self.positive_eta, self.delta_max)
+        layer.weights[same_sign_weight] -= np.sign(layer.dweights[same_sign_weight]) * layer.delta_weights[same_sign_weight]
+        different_sign_weight = layer.dweights_cache * layer.dweights < 0
+        layer.delta_weights[different_sign_weight] = np.maximum(layer.delta_weights[different_sign_weight] * self.negative_eta, self.delta_min)
+        layer.weights[different_sign_weight] -= np.sign(layer.dweights[different_sign_weight]) * layer.delta_weights[different_sign_weight]
+        zero_sign_weight = layer.dweights_cache * layer.dweights == 0
+        layer.weights[zero_sign_weight] -= np.sign(layer.dweights[zero_sign_weight]) * layer.delta_weights[zero_sign_weight]
+        same_sign_bias = layer.dbiases_cache * layer.dbiases > 0
+        layer.delta_biases[same_sign_bias] = np.minimum(layer.delta_biases[same_sign_bias] * self.positive_eta, self.delta_max)
+        layer.biases[same_sign_bias] -= np.sign(layer.dbiases[same_sign_bias]) * layer.delta_biases[same_sign_bias]
+        different_sign_bias = layer.dbiases_cache * layer.dbiases < 0
+        layer.delta_biases[different_sign_bias] = np.maximum(layer.delta_biases[different_sign_bias] * self.negative_eta, self.delta_min)
+        layer.biases[different_sign_bias] -= np.sign(layer.dbiases[different_sign_bias]) * layer.delta_biases[different_sign_bias]
+        zero_sign_bias = layer.dbiases_cache * layer.dbiases == 0
+        layer.biases[zero_sign_bias] -= np.sign(layer.dbiases[zero_sign_bias]) * layer.delta_biases[zero_sign_bias]
+
+'''
+class Optimizer_RProp_Plus:
+    def __init__(self, positive_eta=1.2, negative_eta=0.5, delta_max=50, delta_min=0):
+        self.positive_eta = positive_eta
+        self.negative_eta = negative_eta
+        self.delta_max = delta_max
+        self.delta_min = delta_min
+    def update_params(self, layer):
+        if not hasattr(layer, "delta_weights"):
+            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
+            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        same_sign_weight = layer.dweights_cache * layer.dweights > 0
+        layer.delta_weights[same_sign_weight] = np.minimum(layer.delta_weights[same_sign_weight] * self.positive_eta, self.delta_max)
+        derivatives_same_sign = layer.cache_dweights * layer.dweights >= 0
+        layer.weights[derivatives_same_sign] -= np.sign(layer.dweights[derivatives_same_sign]) * layer.delta_weights[derivatives_same_sign]
+        derivatives_different_sign = layer.cache_dweights * layer.dweights < 0
+        layer.weights[derivatives_different_sign] -=  
+'''
+
+X, y = spiral_data(samples=1000, classes=3)
 dense1 = Layer_Dense(2, 64)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(64, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 optimizer = Optimizer_SGD()
+rprop = Optimizer_RProp()
 for epoch in range(10001):
     dense1.forward(X)
     activation1.forward(dense1.output)
@@ -133,13 +196,16 @@ for epoch in range(10001):
     if len(y.shape) == 2:
         y = np.argmax(y, axis=1)
     accuracy = np.mean(predictions==y)
-    if not epoch % 100:
-        print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+    #if not epoch % 100:
+    print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
     loss_activation.backward(loss_activation.output, y)
     dense2.backward(loss_activation.dinputs)
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
-    optimizer.update_params(dense1)
-    optimizer.update_params(dense2)
+    
+    #optimizer.update_params(dense1)
+    #optimizer.update_params(dense2)
+    rprop.update_params(dense1)
+    rprop.update_params(dense2)
 
 

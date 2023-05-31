@@ -11,8 +11,10 @@ print('X_test:  '  + str(test_X.shape))
 print('Y_test:  '  + str(test_y.shape))
  
 #plotting
+'''
 from matplotlib import pyplot
 for i in range(9):  
     pyplot.subplot(330 + 1 + i)
     pyplot.imshow(train_X[i], cmap=pyplot.get_cmap('gray'))
 pyplot.show()
+'''
