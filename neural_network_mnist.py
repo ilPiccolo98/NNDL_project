@@ -1,6 +1,7 @@
 import numpy as np
 from keras.datasets import mnist
 from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
 
 
 def get_dataset(dimension_training_set, dimensione_test_set):
@@ -13,6 +14,15 @@ def get_dataset(dimension_training_set, dimensione_test_set):
     test_X, test_y = shuffle(test_X, test_y)
     return (train_X[:dimension_training_set], train_y[:dimension_training_set]), (test_X[:dimensione_test_set], test_y[:dimensione_test_set])
 
+
+def plot_values(epochs, loss_values, accuracy_values):
+    fig, axs = plt.subplots(2)
+    fig.suptitle('irprop_minus')
+    axs[0].plot(epochs, loss_values)
+    axs[1].plot(epochs, accuracy_values)
+    axs.flat[0].set(xlabel='Epochs', ylabel='Loss')
+    axs.flat[1].set(xlabel='Epoches', ylabel='Accuracy')
+    plt.show()
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
@@ -289,15 +299,20 @@ rprop_minus = Optimizer_RProp_Minus()
 rprop_plus = Optimizer_RProp_Plus()
 irprop_plus = Optimizer_iRProp_Plus()
 irprop_minus = Optimizer_iRProp_Minus()
-for epoch in range(2000):
+loss_values = []
+EPOCHS = 100
+accuracy_values = []
+for epoch in range(EPOCHS):
     dense1.forward(train_X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
     loss = loss_activation.forward(dense2.output, train_y)
+    loss_values.append(loss)
     predictions = np.argmax(loss_activation.output, axis=1)
     if len(train_y.shape) == 2:
-        train_y = np.argmax(y, axis=1)
+        train_y = np.argmax(train_y, axis=1)
     accuracy = np.mean(predictions==train_y)
+    accuracy_values.append(accuracy)
     #if not epoch % 100:
     print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
     loss_activation.backward(loss_activation.output, train_y)
@@ -316,3 +331,5 @@ for epoch in range(2000):
     irprop_minus.update_params(dense1)
     irprop_minus.update_params(dense2)
 
+epochs = range(EPOCHS)
+plot_values(epochs, loss_values, accuracy_values)
