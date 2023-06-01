@@ -1,5 +1,17 @@
 import numpy as np
 from keras.datasets import mnist
+from sklearn.utils import shuffle
+
+
+def get_dataset(dimension_training_set, dimensione_test_set):
+    (train_X, train_y), (test_X, test_y) = mnist.load_data()
+    train_X = np.array(train_X)
+    train_X = train_X.reshape(train_X.shape[0], train_X.shape[1] * train_X.shape[2])
+    train_X, train_y = shuffle(train_X, train_y)
+    test_X = np.array(test_X)
+    test_X = test_X.reshape(test_X.shape[0], test_X.shape[1] * test_X.shape[2])
+    test_X, test_y = shuffle(test_X, test_y)
+    return (train_X[:dimension_training_set], train_y[:dimension_training_set]), (test_X[:dimensione_test_set], test_y[:dimensione_test_set])
 
 
 class Layer_Dense:
@@ -267,10 +279,8 @@ class Optimizer_iRProp_Minus:
         layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
 
 
-(train_X, train_y), (test_X, test_y) = mnist.load_data()
-train_X = np.array(train_X)
-train_X = train_X.reshape(train_X.shape[0], train_X.shape[1] * train_X.shape[2])
-dense1 = Layer_Dense(784, 64)
+(train_X, train_y), (test_X, test_y) = get_dataset(10000, 2500)
+dense1 = Layer_Dense(train_X.shape[1], 64)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(64, 10)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
@@ -279,7 +289,7 @@ rprop_minus = Optimizer_RProp_Minus()
 rprop_plus = Optimizer_RProp_Plus()
 irprop_plus = Optimizer_iRProp_Plus()
 irprop_minus = Optimizer_iRProp_Minus()
-for epoch in range(10001):
+for epoch in range(2000):
     dense1.forward(train_X)
     activation1.forward(dense1.output)
     dense2.forward(activation1.output)
