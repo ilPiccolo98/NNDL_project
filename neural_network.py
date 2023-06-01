@@ -174,6 +174,7 @@ class Optimizer_RProp_Plus:
         different_sign = layer.dweights_cache * layer.dweights < 0
         layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
         layer.weights[different_sign] -= layer.delta_w_cache[different_sign]
+        delta_w[different_sign] = -layer.delta_w_cache[different_sign]
         layer.dweights[different_sign] = 0
 
         zero_sign = layer.dweights_cache * layer.dweights == 0
@@ -191,6 +192,7 @@ class Optimizer_RProp_Plus:
         different_sign = layer.dbiases_cache * layer.dbiases < 0
         layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
         layer.biases[different_sign] -= layer.delta_b_cache[different_sign]
+        delta_b[different_sign] = -layer.delta_b_cache[different_sign]
         layer.dbiases[different_sign] = 0
 
         zero_sign = layer.dbiases_cache * layer.dbiases == 0
