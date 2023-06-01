@@ -173,6 +173,7 @@ class Optimizer_RProp_Plus:
         different_sign = layer.dweights_cache * layer.dweights < 0
         layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
         layer.weights[different_sign] -= layer.delta_w_cache[different_sign]
+        delta_w[different_sign] = -layer.delta_w_cache[different_sign]
         layer.dweights[different_sign] = 0
 
         zero_sign = layer.dweights_cache * layer.dweights == 0
@@ -190,6 +191,7 @@ class Optimizer_RProp_Plus:
         different_sign = layer.dbiases_cache * layer.dbiases < 0
         layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
         layer.biases[different_sign] -= layer.delta_b_cache[different_sign]
+        delta_b[different_sign] = -layer.delta_b_cache[different_sign]
         layer.dbiases[different_sign] = 0
 
         zero_sign = layer.dbiases_cache * layer.dbiases == 0
@@ -438,8 +440,8 @@ def execute_iRProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
             train_y = np.argmax(train_y, axis=1)
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
-        #if not epoch % 100:
-        print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+        if not epoch % 100:
+            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
@@ -519,16 +521,17 @@ print(f'TEST SET --- acc: {accuracy_test:.3f}, ' f'loss: {loss_test:.3f}')
 plot_values(epochs, loss_values, accuracy_values, "RProp_minus")
 '''
 
-'''
+
 epochs, loss_values, accuracy_values, loss_test, accuracy_test = execute_RProp_plus(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS)
 print(f'TEST SET --- acc: {accuracy_test:.3f}, ' f'loss: {loss_test:.3f}')
 plot_values(epochs, loss_values, accuracy_values, "RProp_plus")
-'''
 
+
+'''
 epochs_iRProp_plus, loss_values_iRProp_plus, accuracy_values_iRProp_plus, loss_test_iRProp_plus, accuracy_test_iRProp_plus = execute_iRProp_plus(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS)
 print(f'TEST SET --- acc: {accuracy_test_iRProp_plus:.3f}, ' f'loss: {loss_test_iRProp_plus:.3f}')
 plot_values(epochs_iRProp_plus, loss_values_iRProp_plus, accuracy_values_iRProp_plus, "iRProp_plus")
-
+'''
 #epochs_iRProp_minus, loss_values_iRProp_minus, accuracy_values_iRProp_minus, loss_test_iRProp_minus, accuracy_test_iRProp_minus = execute_iRProp_minus(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS)
 #print(f'TEST SET --- acc: {accuracy_test_iRProp_minus:.3f}, ' f'loss: {loss_test_iRProp_minus:.3f}')
 #plot_values(epochs_iRProp_minus, loss_values_iRProp_minus, accuracy_values_iRProp_minus, "iRProp_minus")
