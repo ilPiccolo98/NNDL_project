@@ -228,6 +228,7 @@ class Optimizer_iRProp_Plus:
         layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
         if loss > layer.loss_cache:
             layer.weights[different_sign] -= layer.delta_w_cache[different_sign]
+            delta_w[different_sign] = -layer.delta_w_cache[different_sign]
         else:
             delta_w[different_sign] = 0
         layer.dweights[different_sign] = 0
@@ -248,6 +249,7 @@ class Optimizer_iRProp_Plus:
         layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
         if loss > layer.loss_cache:
             layer.biases[different_sign] -= layer.delta_b_cache[different_sign]
+            delta_b[different_sign] = -layer.delta_b_cache[different_sign]
         else:
             delta_b[different_sign] = 0
         layer.dbiases[different_sign] = 0
