@@ -281,18 +281,6 @@ class Optimizer_iRProp_Minus:
         layer.dbiases[different_sign_bias] = 0
         layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
 
-
-def get_dataset(dimension_training_set, dimensione_test_set):
-    (train_X, train_y), (test_X, test_y) = mnist.load_data()
-    train_X = np.array(train_X)
-    train_X = train_X.reshape(train_X.shape[0], train_X.shape[1] * train_X.shape[2])
-    train_X, train_y = shuffle(train_X, train_y)
-    test_X = np.array(test_X)
-    test_X = test_X.reshape(test_X.shape[0], test_X.shape[1] * test_X.shape[2])
-    test_X, test_y = shuffle(test_X, test_y)
-    return (train_X[:dimension_training_set], train_y[:dimension_training_set]), (test_X[:dimensione_test_set], test_y[:dimensione_test_set])
-
-
 def plot_values(epochs, loss_values, accuracy_values, suptitle):
     fig, axs = plt.subplots(2)
     fig.suptitle(suptitle)
