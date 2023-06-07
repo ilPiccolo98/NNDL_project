@@ -15,21 +15,12 @@ def get_dataset(dimension_training_set, dimensione_test_set):
     return (train_X[:dimension_training_set], train_y[:dimension_training_set]), (test_X[:dimensione_test_set], test_y[:dimensione_test_set])
 
 
-(train_X, train_y), (test_X, test_y) = get_dataset(3, 3)
-print(train_y)
 
 
 #loading
 #(train_X, train_y), (test_X, test_y) = mnist.load_data()
 #print(train_y)
- 
 
-
-#shape of dataset
-print('X_train: ' + str(train_X.shape))
-print('Y_train: ' + str(train_y.shape))
-print('X_test:  '  + str(test_X.shape))
-print('Y_test:  '  + str(test_y.shape))
  
 #plotting
 '''
