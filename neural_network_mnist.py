@@ -31,6 +31,17 @@ class Activation_ReLU:
         self.dinputs[self.inputs <= 0] = 0
 
 
+class Activation_LReLU:
+    def __init__(self, alpha=0.0001):
+        self.alpha = alpha
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = np.maximum(0, inputs)
+    def backward(self, dvalues):
+        self.dinputs = dvalues.copy()
+        self.dinputs[self.inputs <= 0] = 0
+
+
 class Activation_Sigmoid:
     def forward(self, inputs):
         self.inputs = inputs
@@ -124,23 +135,23 @@ class Optimizer_RProp_Minus:
         self.delta_max = delta_max
         self.delta_min = delta_min
     def update_params(self, layer):
-        if not hasattr(layer, "delta_weights"):
-            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
-            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        if not hasattr(layer, "weights_step_size"):
+            layer.weights_step_size = np.ones(layer.dweights.shape) * 0.5
+            layer.biases_step_size = np.ones(layer.dbiases.shape) * 0.5
         self.__update_weights(layer)
         self.__update_biases(layer)
     def __update_weights(self, layer):
         same_sign_weight = layer.dweights_cache * layer.dweights > 0
-        layer.delta_weights[same_sign_weight] = np.minimum(layer.delta_weights[same_sign_weight] * self.positive_eta, self.delta_max)
+        layer.weights_step_size[same_sign_weight] = np.minimum(layer.weights_step_size[same_sign_weight] * self.positive_eta, self.delta_max)
         different_sign_weight = layer.dweights_cache * layer.dweights < 0
-        layer.delta_weights[different_sign_weight] = np.maximum(layer.delta_weights[different_sign_weight] * self.negative_eta, self.delta_min)
-        layer.weights -= np.sign(layer.dweights) * layer.delta_weights
+        layer.weights_step_size[different_sign_weight] = np.maximum(layer.weights_step_size[different_sign_weight] * self.negative_eta, self.delta_min)
+        layer.weights -= np.sign(layer.dweights) * layer.weights_step_size
     def __update_biases(self, layer):
         same_sign_bias = layer.dbiases_cache * layer.dbiases > 0
-        layer.delta_biases[same_sign_bias] = np.minimum(layer.delta_biases[same_sign_bias] * self.positive_eta, self.delta_max)
+        layer.biases_step_size[same_sign_bias] = np.minimum(layer.biases_step_size[same_sign_bias] * self.positive_eta, self.delta_max)
         different_sign_bias = layer.dbiases_cache * layer.dbiases < 0
-        layer.delta_biases[different_sign_bias] = np.maximum(layer.delta_biases[different_sign_bias] * self.negative_eta, self.delta_min)
-        layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
+        layer.biases_step_size[different_sign_bias] = np.maximum(layer.biases_step_size[different_sign_bias] * self.negative_eta, self.delta_min)
+        layer.biases -= np.sign(layer.dbiases) * layer.biases_step_size
 
 
 class Optimizer_RProp_Plus:
@@ -150,9 +161,9 @@ class Optimizer_RProp_Plus:
         self.delta_max = delta_max
         self.delta_min = delta_min
     def update_params(self, layer):
-        if not hasattr(layer, "delta_weights"):
-            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
-            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        if not hasattr(layer, "weights_step_size"):
+            layer.weights_step_size = np.ones(layer.dweights.shape) * 0.5
+            layer.biases_step_size = np.ones(layer.dbiases.shape) * 0.5
             layer.delta_w_cache = np.zeros(layer.weights.shape)
             layer.delta_b_cache = np.zeros(layer.biases.shape)        
         self.__update_weights(layer)
@@ -160,36 +171,34 @@ class Optimizer_RProp_Plus:
     def __update_weights(self, layer):
         delta_w = np.copy(layer.delta_w_cache)
         same_sign = layer.dweights_cache * layer.dweights > 0
-        layer.delta_weights[same_sign] = np.minimum(layer.delta_weights[same_sign] * self.positive_eta, self.delta_max)
-        delta_w[same_sign] = -np.sign(layer.dweights[same_sign]) * layer.delta_weights[same_sign]
+        layer.weights_step_size[same_sign] = np.minimum(layer.weights_step_size[same_sign] * self.positive_eta, self.delta_max)
+        delta_w[same_sign] = -np.sign(layer.dweights[same_sign]) * layer.weights_step_size[same_sign]
         layer.weights[same_sign] += delta_w[same_sign]
 
         different_sign = layer.dweights_cache * layer.dweights < 0
-        layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
+        layer.weights_step_size[different_sign] = np.maximum(layer.weights_step_size[different_sign] * self.negative_eta, self.delta_min)
         layer.weights[different_sign] -= layer.delta_w_cache[different_sign]
-        delta_w[different_sign] = -layer.delta_w_cache[different_sign]
         layer.dweights[different_sign] = 0
 
         zero_sign = layer.dweights_cache * layer.dweights == 0
-        delta_w[zero_sign] = -np.sign(layer.dweights[zero_sign]) * layer.delta_weights[zero_sign]
+        delta_w[zero_sign] = -np.sign(layer.dweights[zero_sign]) * layer.weights_step_size[zero_sign]
         layer.weights[zero_sign] += delta_w[zero_sign]
 
         layer.delta_w_cache = delta_w
     def __update_biases(self, layer):
         delta_b = np.copy(layer.delta_b_cache)
         same_sign = layer.dbiases_cache * layer.dbiases > 0
-        layer.delta_biases[same_sign] = np.minimum(layer.delta_biases[same_sign] * self.positive_eta, self.delta_max)
-        delta_b[same_sign] = -np.sign(layer.dbiases[same_sign]) * layer.delta_biases[same_sign]
+        layer.biases_step_size[same_sign] = np.minimum(layer.biases_step_size[same_sign] * self.positive_eta, self.delta_max)
+        delta_b[same_sign] = -np.sign(layer.dbiases[same_sign]) * layer.biases_step_size[same_sign]
         layer.biases[same_sign] += delta_b[same_sign]
 
         different_sign = layer.dbiases_cache * layer.dbiases < 0
-        layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
+        layer.biases_step_size[different_sign] = np.maximum(layer.biases_step_size[different_sign] * self.negative_eta, self.delta_min)
         layer.biases[different_sign] -= layer.delta_b_cache[different_sign]
-        delta_b[different_sign] = -layer.delta_b_cache[different_sign]
         layer.dbiases[different_sign] = 0
 
         zero_sign = layer.dbiases_cache * layer.dbiases == 0
-        delta_b[zero_sign] = -np.sign(layer.dbiases[zero_sign]) * layer.delta_biases[zero_sign]
+        delta_b[zero_sign] = -np.sign(layer.dbiases[zero_sign]) * layer.biases_step_size[zero_sign]
         layer.biases[zero_sign] += delta_b[zero_sign]
 
         layer.delta_b_cache = delta_b
@@ -202,44 +211,42 @@ class Optimizer_iRProp_Plus:
         self.delta_max = delta_max
         self.delta_min = delta_min
     def update_params(self, layer, loss):
-        if not hasattr(layer, "delta_weights"):
-            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
-            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        if not hasattr(layer, "weights_step_size"):
+            layer.weights_step_size = np.ones(layer.dweights.shape) * 0.5
+            layer.biases_step_size = np.ones(layer.dbiases.shape) * 0.5
             layer.delta_w_cache = np.zeros(layer.weights.shape)
             layer.delta_b_cache = np.zeros(layer.biases.shape)
             layer.loss_cache = 0        
         self.__update_weights(layer, loss)
         self.__update_biases(layer, loss)
+        layer.loss_cache = loss
     def __update_weights(self, layer, loss):
         delta_w = np.copy(layer.delta_w_cache)
         same_sign = layer.dweights_cache * layer.dweights > 0
-        layer.delta_weights[same_sign] = np.minimum(layer.delta_weights[same_sign] * self.positive_eta, self.delta_max)
-        delta_w[same_sign] = -np.sign(layer.dweights[same_sign]) * layer.delta_weights[same_sign]
+        layer.weights_step_size[same_sign] = np.minimum(layer.weights_step_size[same_sign] * self.positive_eta, self.delta_max)
+        delta_w[same_sign] = -np.sign(layer.dweights[same_sign]) * layer.weights_step_size[same_sign]
         layer.weights[same_sign] += delta_w[same_sign]
 
         different_sign = layer.dweights_cache * layer.dweights < 0
-        layer.delta_weights[different_sign] = np.maximum(layer.delta_weights[different_sign] * self.negative_eta, self.delta_min)
+        layer.weights_step_size[different_sign] = np.maximum(layer.weights_step_size[different_sign] * self.negative_eta, self.delta_min)
         if loss > layer.loss_cache:
             layer.weights[different_sign] -= layer.delta_w_cache[different_sign]
-            delta_w[different_sign] = -layer.delta_w_cache[different_sign]
-        else:
-            delta_w[different_sign] = 0
         layer.dweights[different_sign] = 0
 
         zero_sign = layer.dweights_cache * layer.dweights == 0
-        delta_w[zero_sign] = -np.sign(layer.dweights[zero_sign]) * layer.delta_weights[zero_sign]
+        delta_w[zero_sign] = -np.sign(layer.dweights[zero_sign]) * layer.weights_step_size[zero_sign]
         layer.weights[zero_sign] += delta_w[zero_sign]
 
         layer.delta_w_cache = delta_w
     def __update_biases(self, layer, loss):
         delta_b = np.copy(layer.delta_b_cache)
         same_sign = layer.dbiases_cache * layer.dbiases > 0
-        layer.delta_biases[same_sign] = np.minimum(layer.delta_biases[same_sign] * self.positive_eta, self.delta_max)
-        delta_b[same_sign] = -np.sign(layer.dbiases[same_sign]) * layer.delta_biases[same_sign]
+        layer.biases_step_size[same_sign] = np.minimum(layer.biases_step_size[same_sign] * self.positive_eta, self.delta_max)
+        delta_b[same_sign] = -np.sign(layer.dbiases[same_sign]) * layer.biases_step_size[same_sign]
         layer.biases[same_sign] += delta_b[same_sign]
 
         different_sign = layer.dbiases_cache * layer.dbiases < 0
-        layer.delta_biases[different_sign] = np.maximum(layer.delta_biases[different_sign] * self.negative_eta, self.delta_min)
+        layer.biases_step_size[different_sign] = np.maximum(layer.biases_step_size[different_sign] * self.negative_eta, self.delta_min)
         if loss > layer.loss_cache:
             layer.biases[different_sign] -= layer.delta_b_cache[different_sign]
             delta_b[different_sign] = -layer.delta_b_cache[different_sign]
@@ -248,7 +255,7 @@ class Optimizer_iRProp_Plus:
         layer.dbiases[different_sign] = 0
 
         zero_sign = layer.dbiases_cache * layer.dbiases == 0
-        delta_b[zero_sign] = -np.sign(layer.dbiases[zero_sign]) * layer.delta_biases[zero_sign]
+        delta_b[zero_sign] = -np.sign(layer.dbiases[zero_sign]) * layer.biases_step_size[zero_sign]
         layer.biases[zero_sign] += delta_b[zero_sign]
 
         layer.delta_b_cache = delta_b
@@ -261,25 +268,26 @@ class Optimizer_iRProp_Minus:
         self.delta_max = delta_max
         self.delta_min = delta_min
     def update_params(self, layer):
-        if not hasattr(layer, "delta_weights"):
-            layer.delta_weights = np.ones(layer.dweights.shape) * 0.5
-            layer.delta_biases = np.ones(layer.dbiases.shape) * 0.5
+        if not hasattr(layer, "weights_step_size"):
+            layer.weights_step_size = np.ones(layer.dweights.shape) * 0.5
+            layer.biases_step_size = np.ones(layer.dbiases.shape) * 0.5
         self.__update_weights(layer)
         self.__update_biases(layer)
     def __update_weights(self, layer):
         same_sign_weight = layer.dweights_cache * layer.dweights > 0
-        layer.delta_weights[same_sign_weight] = np.minimum(layer.delta_weights[same_sign_weight] * self.positive_eta, self.delta_max)
+        layer.weights_step_size[same_sign_weight] = np.minimum(layer.weights_step_size[same_sign_weight] * self.positive_eta, self.delta_max)
         different_sign_weight = layer.dweights_cache * layer.dweights < 0
-        layer.delta_weights[different_sign_weight] = np.maximum(layer.delta_weights[different_sign_weight] * self.negative_eta, self.delta_min)
+        layer.weights_step_size[different_sign_weight] = np.maximum(layer.weights_step_size[different_sign_weight] * self.negative_eta, self.delta_min)
         layer.dweights[different_sign_weight] = 0
-        layer.weights -= np.sign(layer.dweights) * layer.delta_weights
+        layer.weights -= np.sign(layer.dweights) * layer.weights_step_size
     def __update_biases(self, layer):
         same_sign_bias = layer.dbiases_cache * layer.dbiases > 0
-        layer.delta_biases[same_sign_bias] = np.minimum(layer.delta_biases[same_sign_bias] * self.positive_eta, self.delta_max)
+        layer.biases_step_size[same_sign_bias] = np.minimum(layer.biases_step_size[same_sign_bias] * self.positive_eta, self.delta_max)
         different_sign_bias = layer.dbiases_cache * layer.dbiases < 0
-        layer.delta_biases[different_sign_bias] = np.maximum(layer.delta_biases[different_sign_bias] * self.negative_eta, self.delta_min)
+        layer.biases_step_size[different_sign_bias] = np.maximum(layer.biases_step_size[different_sign_bias] * self.negative_eta, self.delta_min)
         layer.dbiases[different_sign_bias] = 0
-        layer.biases -= np.sign(layer.dbiases) * layer.delta_biases
+        layer.biases -= np.sign(layer.dbiases) * layer.biases_step_size
+
 
 def plot_values(epochs, loss_values, accuracy_values, suptitle):
     fig, axs = plt.subplots(2)
