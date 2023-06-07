@@ -4,8 +4,8 @@ from neural_network_mnist import execute_SGD, execute_RProp_minus, execute_RProp
 from mnist import get_dataset
 
 
-(train_X, train_y), (test_X, test_y) = get_dataset(1000, 100)
-EPOCHS = 1000
+(train_X, train_y), (test_X, test_y) = get_dataset(8000, 100)
+EPOCHS = 501
 N_NEURONS = 200
 
 epochs_SGD, loss_values_SGD, accuracy_values_SGD, loss_test_SGD, accuracy_test_SGD = execute_SGD(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS)
