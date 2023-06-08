@@ -290,19 +290,8 @@ class Optimizer_iRProp_Minus:
         layer.biases -= np.sign(layer.dbiases) * layer.biases_step_size
 
 
-def plot_values(epochs, loss_values, accuracy_values, suptitle):
-    fig, axs = plt.subplots(2)
-    fig.suptitle(suptitle)
-    axs[0].plot(epochs, loss_values)
-    axs[1].plot(epochs, accuracy_values)
-    axs.flat[0].set(xlabel='Epochs', ylabel='Loss')
-    axs.flat[1].set(xlabel='Epochs', ylabel='Accuracy')
-    plt.show()
-
-
-def execute_SGD(train_X, train_y, test_X, test_Y, epochs, n_neurons):
+def execute_SGD(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
     dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    activation1 = Activation_LReLU()
     dense2 = Layer_Dense(n_neurons, 10)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     optimizer = Optimizer_SGD()
@@ -338,9 +327,8 @@ def execute_SGD(train_X, train_y, test_X, test_Y, epochs, n_neurons):
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
 
-def execute_RProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
+def execute_RProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
     dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    activation1 = Activation_LReLU()
     dense2 = Layer_Dense(n_neurons, 10)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     optimizer = Optimizer_RProp_Minus()
@@ -376,9 +364,8 @@ def execute_RProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
 
-def execute_RProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
+def execute_RProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
     dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    activation1 = Activation_LReLU()
     dense2 = Layer_Dense(n_neurons, 10)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     optimizer = Optimizer_RProp_Plus()
@@ -414,9 +401,8 @@ def execute_RProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
 
-def execute_iRProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
+def execute_iRProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
     dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    activation1 = Activation_LReLU()
     dense2 = Layer_Dense(n_neurons, 10)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     optimizer = Optimizer_iRProp_Plus()
@@ -452,9 +438,8 @@ def execute_iRProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
 
-def execute_iRProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
+def execute_iRProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
     dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    activation1 = Activation_LReLU()
     dense2 = Layer_Dense(n_neurons, 10)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     optimizer = Optimizer_iRProp_Minus()
@@ -489,11 +474,4 @@ def execute_iRProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons):
     accuracy_test = np.mean(predictions==test_Y)
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
-
-def overlap_plots(values, epochs, xlabel, ylabel):
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    for value in values:
-        plt.plot(epochs, value)
-    plt.show()
 
