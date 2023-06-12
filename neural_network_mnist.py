@@ -1,12 +1,16 @@
 import numpy as np
-from keras.datasets import mnist
-from sklearn.utils import shuffle
-import matplotlib.pyplot as plt
+import math
 
+def get_weights(n_inputs, n_neurons):
+    np.random.seed(0)
+    scale = 1/max(1., (2+2)/2.)
+    limit = math.sqrt(3.0 * scale)
+    weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
+    return weights
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+        self.weights = get_weights(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
         self.dweights_cache = np.zeros((n_inputs, n_neurons))
         self.dbiases_cache = np.zeros((1, n_neurons))
@@ -125,7 +129,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
 
 class Optimizer_SGD:
-    def __init__(self, learning_rate=0.0001):
+    def __init__(self, learning_rate=1):
         self.learning_rate = learning_rate
     def update_params(self, layer):
         layer.weights += -self.learning_rate * layer.dweights
