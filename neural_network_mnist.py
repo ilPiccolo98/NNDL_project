@@ -327,7 +327,7 @@ def execute_SGD(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
         if not epoch % 100:
-            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+            print(f'-SGD epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
@@ -364,7 +364,7 @@ def execute_RProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, act
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
         if not epoch % 100:
-            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+            print(f'-Rp- epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
@@ -401,7 +401,7 @@ def execute_RProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, acti
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
         if not epoch % 100:
-            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+            print(f'-Rp+ epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
@@ -438,7 +438,7 @@ def execute_iRProp_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, act
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
         if not epoch % 100:
-            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+            print(f'-iR+ epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
@@ -475,7 +475,7 @@ def execute_iRProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, ac
         accuracy = np.mean(predictions==train_y)
         accuracy_values.append(accuracy)
         if not epoch % 100:
-            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+            print(f'-iR- epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
         loss_activation.backward(loss_activation.output, train_y)
         dense2.backward(loss_activation.dinputs)
         activation1.backward(dense2.dinputs)
