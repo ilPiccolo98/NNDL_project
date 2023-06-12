@@ -1,16 +1,22 @@
 import numpy as np
 import math
 
-def get_weights(n_inputs, n_neurons):
+def get_weights_xavier(n_inputs, n_neurons):
     np.random.seed(0)
     scale = 1/max(1., (2+2)/2.)
     limit = math.sqrt(3.0 * scale)
     weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
     return weights
 
+
+def get_weights(n_inputs, n_neurons):
+    weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+    return weights
+
+
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
-        self.weights = get_weights(n_inputs, n_neurons)
+        self.weights = get_weights_xavier(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
         self.dweights_cache = np.zeros((n_inputs, n_neurons))
         self.dbiases_cache = np.zeros((1, n_neurons))
