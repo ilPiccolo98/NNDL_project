@@ -122,6 +122,9 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.activation.forward(inputs)
         self.output = self.activation.output
         return self.loss.calculate(self.output, y_true)
+    def forward_without_loss(self, inputs):
+        self.activation.forward(inputs)
+        self.output = self.activation.output
     def backward(self, dvalues, y_true):
         samples = len(dvalues)
         if len(y_true.shape) == 2:
@@ -484,4 +487,144 @@ def execute_iRProp_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, ac
     accuracy_test = np.mean(predictions==test_Y)
     return range(epochs), loss_values, accuracy_values, loss_test, accuracy_test
 
+class NeuralNetwork:
+    def __init__(self, layer1, activation_f, layer2, loss_activation_f, optimizer):
+        self.layer1 = layer1
+        self.activation_f = activation_f
+        self.layer2 = layer2
+        self.softmax = loss_activation_f
+        self.optimizer = optimizer
+
+    def forward(self, elem):
+        self.layer1.forward(elem)
+        self.activation_f.forward(self.layer1.output)
+        self.layer2.forward(self.activation_f.output)
+        self.softmax.forward_without_loss(self.layer2.output)
+        prediction = np.argmax(self.softmax.output, axis=1)
+        return prediction
+
+def train_network_with_iRprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
+    dense2 = Layer_Dense(n_neurons, 10)
+    loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
+    loss_values = []
+    accuracy_values = []
+    optimizer = Optimizer_iRProp_Plus()
+    for epoch in range(epochs):
+        dense1.forward(train_X)
+        activation1.forward(dense1.output)
+        dense2.forward(activation1.output)
+        loss = loss_activation.forward(dense2.output, train_y)
+        loss_values.append(loss)
+        predictions = np.argmax(loss_activation.output, axis=1)
+        if len(train_y.shape) == 2:
+            train_y = np.argmax(train_y, axis=1)
+        accuracy = np.mean(predictions==train_y)
+        accuracy_values.append(accuracy)
+        if not epoch % 100:
+            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+        loss_activation.backward(loss_activation.output, train_y)
+        dense2.backward(loss_activation.dinputs)
+        activation1.backward(dense2.dinputs)
+        dense1.backward(activation1.dinputs)
+        optimizer.update_params(dense1, loss)
+        optimizer.update_params(dense2, loss)
+
+    dense1.forward(test_X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    loss_test = loss_activation.forward(dense2.output, test_Y)
+    predictions = np.argmax(loss_activation.output, axis=1)
+    if len(test_Y.shape) == 2:
+        test_Y = np.argmax(test_Y, axis=1)
+    accuracy_test = np.mean(predictions == test_Y)
+
+    print("Training ended.")
+    print(f"Results on TEST SET are: accuracy = {accuracy_test}, loss = {loss_test}")
+
+    return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
+
+
+def train_network_with_iRprop_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
+    dense2 = Layer_Dense(n_neurons, 10)
+    loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
+    loss_values = []
+    accuracy_values = []
+    optimizer = Optimizer_iRProp_Minus()
+    for epoch in range(epochs):
+        dense1.forward(train_X)
+        activation1.forward(dense1.output)
+        dense2.forward(activation1.output)
+        loss = loss_activation.forward(dense2.output, train_y)
+        loss_values.append(loss)
+        predictions = np.argmax(loss_activation.output, axis=1)
+        if len(train_y.shape) == 2:
+            train_y = np.argmax(train_y, axis=1)
+        accuracy = np.mean(predictions==train_y)
+        accuracy_values.append(accuracy)
+        if not epoch % 100:
+            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+        loss_activation.backward(loss_activation.output, train_y)
+        dense2.backward(loss_activation.dinputs)
+        activation1.backward(dense2.dinputs)
+        dense1.backward(activation1.dinputs)
+        optimizer.update_params(dense1)
+        optimizer.update_params(dense2)
+
+    dense1.forward(test_X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    loss_test = loss_activation.forward(dense2.output, test_Y)
+    predictions = np.argmax(loss_activation.output, axis=1)
+    if len(test_Y.shape) == 2:
+        test_Y = np.argmax(test_Y, axis=1)
+    accuracy_test = np.mean(predictions == test_Y)
+
+    print("Training ended.")
+    print(f"Results on TEST SET are: accuracy = {accuracy_test}, loss = {loss_test}")
+
+    return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
+
+
+def train_network_with_Rprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
+    dense2 = Layer_Dense(n_neurons, 10)
+    loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
+    loss_values = []
+    accuracy_values = []
+    optimizer = Optimizer_RProp_Plus()
+    for epoch in range(epochs):
+        dense1.forward(train_X)
+        activation1.forward(dense1.output)
+        dense2.forward(activation1.output)
+        loss = loss_activation.forward(dense2.output, train_y)
+        loss_values.append(loss)
+        predictions = np.argmax(loss_activation.output, axis=1)
+        if len(train_y.shape) == 2:
+            train_y = np.argmax(train_y, axis=1)
+        accuracy = np.mean(predictions==train_y)
+        accuracy_values.append(accuracy)
+        if not epoch % 100:
+            print(f'epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+        loss_activation.backward(loss_activation.output, train_y)
+        dense2.backward(loss_activation.dinputs)
+        activation1.backward(dense2.dinputs)
+        dense1.backward(activation1.dinputs)
+        optimizer.update_params(dense1)
+        optimizer.update_params(dense2)
+
+    dense1.forward(test_X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    loss_test = loss_activation.forward(dense2.output, test_Y)
+    predictions = np.argmax(loss_activation.output, axis=1)
+    if len(test_Y.shape) == 2:
+        test_Y = np.argmax(test_Y, axis=1)
+    accuracy_test = np.mean(predictions == test_Y)
+
+    print("Training ended.")
+    print(f"Results on TEST SET are: accuracy = {accuracy_test}, loss = {loss_test}")
+
+    return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
 
