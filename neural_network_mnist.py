@@ -20,6 +20,8 @@ class Layer_Dense:
             self.weights = get_weights(n_inputs, n_neurons)
         elif initialization == "xavier":
             self.weights = get_weights_xavier(n_inputs, n_neurons)
+        else:
+            raise Exception("Invalid weight initialization rule")
         self.biases = np.zeros((1, n_neurons))
         self.dweights_cache = np.zeros((n_inputs, n_neurons))
         self.dbiases_cache = np.zeros((1, n_neurons))
