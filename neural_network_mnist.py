@@ -15,8 +15,11 @@ def get_weights(n_inputs, n_neurons):
 
 
 class Layer_Dense:
-    def __init__(self, n_inputs, n_neurons):
-        self.weights = get_weights_xavier(n_inputs, n_neurons)
+    def __init__(self, n_inputs, n_neurons, initialization="xavier"):
+        if initialization == "random":
+            self.weights = get_weights(n_inputs, n_neurons)
+        elif initialization == "xavier":
+            self.weights = get_weights_xavier(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
         self.dweights_cache = np.zeros((n_inputs, n_neurons))
         self.dbiases_cache = np.zeros((1, n_neurons))
