@@ -140,7 +140,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
 
 
 class Optimizer_SGD:
-    def __init__(self, learning_rate=1):
+    def __init__(self, learning_rate=0.0001):
         self.learning_rate = learning_rate
     def update_params(self, layer):
         layer.weights += -self.learning_rate * layer.dweights
