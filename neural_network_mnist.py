@@ -508,9 +508,9 @@ class NeuralNetwork:
         prediction = np.argmax(self.softmax.output, axis=1)
         return prediction
 
-def train_network_with_iRprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
-    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    dense2 = Layer_Dense(n_neurons, 10)
+def train_network_with_iRprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1, weight_init_rule="random"):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons, initialization=weight_init_rule)
+    dense2 = Layer_Dense(n_neurons, 10, initialization=weight_init_rule)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     loss_values = []
     accuracy_values = []
@@ -550,9 +550,9 @@ def train_network_with_iRprop_plus(train_X, train_y, test_X, test_Y, epochs, n_n
     return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
 
 
-def train_network_with_iRprop_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
-    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    dense2 = Layer_Dense(n_neurons, 10)
+def train_network_with_iRprop_minus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1, weight_init_rule="random"):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons, initialization=weight_init_rule)
+    dense2 = Layer_Dense(n_neurons, 10, initialization=weight_init_rule)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     loss_values = []
     accuracy_values = []
@@ -592,9 +592,9 @@ def train_network_with_iRprop_minus(train_X, train_y, test_X, test_Y, epochs, n_
     return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
 
 
-def train_network_with_Rprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1):
-    dense1 = Layer_Dense(train_X.shape[1], n_neurons)
-    dense2 = Layer_Dense(n_neurons, 10)
+def train_network_with_Rprop_plus(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1, weight_init_rule="random"):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons, initialization=weight_init_rule)
+    dense2 = Layer_Dense(n_neurons, 10, initialization=weight_init_rule)
     loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
     loss_values = []
     accuracy_values = []
