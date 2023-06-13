@@ -1,10 +1,10 @@
 import numpy as np
 import math
 
+
 def get_weights_xavier(n_inputs, n_neurons):
-    mean = 0
-    std = math.sqrt(2 / (n_inputs + n_neurons))
-    weights = np.random.normal(mean, std, size=(n_inputs,n_neurons))
+    limit = math.sqrt(6) / math.sqrt(n_inputs + n_neurons)
+    weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
     return weights
 
 
