@@ -53,11 +53,13 @@ def thread_iRprop_plus(ret_container: dict, activ_func, weight_init):
     ret_container['accuracy'] = accuracy_values
     ret_container['accuracy_test'] = accuracy_test
 
+
 # TEST PARAMETERS
-(train_X, train_y), (test_X, test_y) = get_dataset(20000, 5000)
 EPOCHS = 1000
-N_NEURONS = 64
+N_NEURONS = 150
 network_weight_init_rule = "xavier"
+normalize_dataset = False
+(train_X, train_y), (test_X, test_y) = get_dataset(20000, 5000, normalize_dataset)
 
 
 # RELU
@@ -68,18 +70,22 @@ network_weight_init_rule = "xavier"
 # activation1_irprop_minus = Activation_ReLU()
 
 # LEAKY RELU
-activation1_sgd = Activation_LReLU()
-activation1_rprop_minus = Activation_LReLU()
-activation1_rprop_plus = Activation_LReLU()
-activation1_irprop_plus = Activation_LReLU()
-activation1_irprop_minus = Activation_LReLU()
+# activation1_sgd = Activation_LReLU()
+# activation1_rprop_minus = Activation_LReLU()
+# activation1_rprop_plus = Activation_LReLU()
+# activation1_irprop_plus = Activation_LReLU()
+# activation1_irprop_minus = Activation_LReLU()
 
 # SIGMOID
-# activation1_sgd = Activation_Sigmoid()
-# activation1_rprop_minus = Activation_Sigmoid()
-# activation1_rprop_plus = Activation_Sigmoid()
-# activation1_irprop_plus = Activation_Sigmoid()
-# activation1_irprop_minus = Activation_Sigmoid()
+activation1_sgd = Activation_Sigmoid()
+activation1_rprop_minus = Activation_Sigmoid()
+activation1_rprop_plus = Activation_Sigmoid()
+activation1_irprop_plus = Activation_Sigmoid()
+activation1_irprop_minus = Activation_Sigmoid()
+
+print("Starting test")
+print(f"Training set cardinality: {len(train_X)} \nTest set cardinality: {len(test_X)}")
+print(f"Neurons: {N_NEURONS}\nWeight Init Rule: {network_weight_init_rule}\nDataset Normalized: {normalize_dataset}\n\n")
 
 # MULTI THREAD EXECUTION
 ret_SGD = {}
@@ -113,7 +119,7 @@ print(f'iRprop+ TEST SET --- acc: {ret_iRprop_plus.get("accuracy_test"):.3f}, ' 
 print(f'iRprop- TEST SET --- acc: {ret_iRprop_minus.get("accuracy_test"):.3f}, ' f'loss: {ret_iRprop_minus.get("loss_test"):.3f}')
 
 fig, axs = plt.subplots(2)
-fig.suptitle("Grafici")
+fig.suptitle(f"N{N_NEURONS}_{network_weight_init_rule}_data_{'norm' if normalize_dataset else 'not_norm'}")
 axs[0].plot(ret_SGD.get("epochs"), ret_SGD.get("loss"), label='SGD')
 axs[0].plot(ret_Rprop_minus.get("epochs"), ret_Rprop_minus.get("loss"), label='Rprop-')
 axs[0].plot(ret_Rprop_plus.get("epochs"), ret_Rprop_plus.get("loss"), label='Rprop+')
