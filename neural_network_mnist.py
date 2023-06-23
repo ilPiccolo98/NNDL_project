@@ -3,8 +3,15 @@ import math
 
 
 def get_weights_xavier(n_inputs, n_neurons):
-    limit = math.sqrt(6) / math.sqrt(n_inputs + n_neurons)
-    weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
+    # XAVIER-MAZZA
+    np.random.seed(0)
+    scale = 1 / max(1., (n_inputs + n_neurons) / n_inputs)
+    limit = math.sqrt(3.0 * scale)
+    weights = np.random.uniform(-limit, limit, size=(n_inputs, n_neurons))
+
+    # XAVIER CLASSICA
+    # limit = math.sqrt(6) / math.sqrt(n_inputs + n_neurons)
+    # weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
     return weights
 
 
