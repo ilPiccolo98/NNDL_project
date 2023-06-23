@@ -2,30 +2,14 @@ import numpy as np
 import math
 
 
-def get_weights_xavier(n_inputs, n_neurons):
-    # XAVIER-MAZZA
-    np.random.seed(0)
-    scale = 1 / max(1., (n_inputs + n_neurons) / n_inputs)
-    limit = math.sqrt(3.0 * scale)
-    weights = np.random.uniform(-limit, limit, size=(n_inputs, n_neurons))
-
-    # XAVIER CLASSICA
-    # limit = math.sqrt(6) / math.sqrt(n_inputs + n_neurons)
-    # weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
-    return weights
-
-
-def get_weights(n_inputs, n_neurons):
-    weights = 0.01 * np.random.randn(n_inputs, n_neurons)
-    return weights
-
-
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons, initialization="xavier"):
         if initialization == "random":
-            self.weights = get_weights(n_inputs, n_neurons)
+            self.weights = self.__get_weights(n_inputs, n_neurons)
         elif initialization == "xavier":
-            self.weights = get_weights_xavier(n_inputs, n_neurons)
+            self.weights = self.__get_weights_xavier(n_inputs, n_neurons)
+        elif initialization == "xavier_variant":
+            self.weights = self.__get_weights_xavier_variant(n_inputs, n_neurons)
         else:
             raise Exception("Invalid weight initialization rule")
         self.biases = np.zeros((1, n_neurons))
@@ -41,6 +25,19 @@ class Layer_Dense:
         self.dweights = np.dot(self.inputs.T, dvalues)
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
+    def __get_weights_xavier(self, n_inputs, n_neurons):
+        limit = math.sqrt(6) / math.sqrt(n_inputs + n_neurons)
+        weights = np.random.uniform(-limit, limit, size=(n_inputs,n_neurons))
+        return weights
+    def __get_weights(self, n_inputs, n_neurons):
+        weights = 0.01 * np.random.randn(n_inputs, n_neurons)
+        return weights
+    def __get_weights_xavier_variant(self, n_inputs, n_neurons):
+        np.random.seed(0)
+        scale = 1 / max(1., (n_inputs + n_neurons) / n_inputs)
+        limit = math.sqrt(3.0 * scale)
+        weights = np.random.uniform(-limit, limit, size=(n_inputs, n_neurons))
+        return weights
 
 
 class Activation_ReLU:
