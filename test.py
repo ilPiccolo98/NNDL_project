@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from neural_network_mnist import train_network_with_iRprop_plus, Activation_LReLU, train_network_with_iRprop_minus, train_network_with_Rprop_plus
+from neural_network_mnist import train_network_with_iRprop_plus, Activation_LReLU, train_network_with_iRprop_minus, \
+    train_network_with_Rprop_plus, Activation_ReLU, train_network_with_SGD
 from mnist import get_dataset
 import cv2
 
@@ -17,12 +18,14 @@ img9 = cv2.imread("9.bmp", 0)
 
 img_arr = np.array([img0, img1, img2, img3, img4, img5, img6, img7, img8, img9]).reshape(10, 784)
 
-(train_X, train_y), (test_X, test_y) = get_dataset(20000, 5000)
-EPOCHS = 600
-N_NEURONS = 750
+img_arr = img_arr / 255
+
+(train_X, train_y), (test_X, test_y) = get_dataset(30000, 5000)
+EPOCHS = 1000
+N_NEURONS = 500
 
 activ_func = Activation_LReLU()
-network = train_network_with_Rprop_plus(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS, activ_func)
+network = train_network_with_SGD(train_X, train_y, test_X, test_y, EPOCHS, N_NEURONS, activ_func, "random")
 
 prediction = network.forward(img_arr)
 

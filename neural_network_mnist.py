@@ -636,3 +636,43 @@ def train_network_with_Rprop_plus(train_X, train_y, test_X, test_Y, epochs, n_ne
 
     return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
 
+def train_network_with_SGD(train_X, train_y, test_X, test_Y, epochs, n_neurons, activation1, weight_init_rule="random"):
+    dense1 = Layer_Dense(train_X.shape[1], n_neurons, initialization=weight_init_rule)
+    dense2 = Layer_Dense(n_neurons, 10, initialization=weight_init_rule)
+    loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
+    optimizer = Optimizer_SGD()
+    loss_values = []
+    accuracy_values = []
+    for epoch in range(epochs):
+        dense1.forward(train_X)
+        activation1.forward(dense1.output)
+        dense2.forward(activation1.output)
+        loss = loss_activation.forward(dense2.output, train_y)
+        loss_values.append(loss)
+        predictions = np.argmax(loss_activation.output, axis=1)
+        if len(train_y.shape) == 2:
+            train_y = np.argmax(train_y, axis=1)
+        accuracy = np.mean(predictions==train_y)
+        accuracy_values.append(accuracy)
+        if not epoch % 100:
+            print(f'-SGD epoch: {epoch}, ' f'acc: {accuracy:.3f}, ' f'loss: {loss:.3f}')
+        loss_activation.backward(loss_activation.output, train_y)
+        dense2.backward(loss_activation.dinputs)
+        activation1.backward(dense2.dinputs)
+        dense1.backward(activation1.dinputs)
+        optimizer.update_params(dense1)
+        optimizer.update_params(dense2)
+
+    dense1.forward(test_X)
+    activation1.forward(dense1.output)
+    dense2.forward(activation1.output)
+    loss_test = loss_activation.forward(dense2.output, test_Y)
+    predictions = np.argmax(loss_activation.output, axis=1)
+    if len(test_Y.shape) == 2:
+        test_Y = np.argmax(test_Y, axis=1)
+    accuracy_test = np.mean(predictions==test_Y)
+
+    print("Training ended.")
+    print(f"Results on TEST SET are: accuracy = {accuracy_test}, loss = {loss_test}")
+
+    return NeuralNetwork(dense1, activation1, dense2, loss_activation, optimizer)
